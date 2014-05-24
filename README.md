@@ -18,11 +18,11 @@ Forked from https://github.com/zrlram/arcsight_logger (Raffael Marty of pixlclou
 ## examples
 ```
 $ ./query-logger.py -l mylogger 
-    -q ""(sourceAddress=\"$IP\" OR destinationAddress=\"$IP\") 
-    -s "`date -d \"7 days ago\" '+%F %T'`" 
+    -q '(sourceAddress="192.168.0.1" OR destinationAddress="192.168.0.1")'
+    -s "`date -d '7 days ago' '+%F %T'`" 
 
 $ ./query-logger.py -l mylogger 
-    -r F123F654-ABCD-CDEF-0000-123123123123 
+    -r "F123F654-ABCD-CDEF-0000-123123123123"
     -s "2014-01-01 00:00:00" 
     --reportdevices="192.168.0.0 [ARCS1]" --reportdevicegroups="NET" --reportstoragegroups="SGNET" 
     -f csv
