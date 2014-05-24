@@ -1,6 +1,6 @@
 #!/usr/bin/python
-# $Id$
-# marcin.gryszkalis@mbank.pl
+# mg@fork.pl
+# https://github.com/marcin-gryszkalis/arcsight_logger
 
 import suds
 from suds.xsd.doctor import Import, ImportDoctor
@@ -11,13 +11,6 @@ import pprint
 import getopt
 import ConfigParser
 import base64
-
-# [credentials]
-# user = xxx
-# password = xxx
-# [loggers]
-# lgib = 10.24.53.3
-# lgl = 10.24.51.3
 
 Config = ConfigParser.ConfigParser()
 Config.read("logger.ini")
@@ -54,8 +47,8 @@ step=1000
 scanlimit=0
 resulttowlimit=0
 reportdevices="null"
-reportdevicegroups="null" # "PROD"
-reportstoragegroups="null" # SGLodIB"
+reportdevicegroups="null"
+reportstoragegroups="null"
 reportparameters=""
 reportformat="CSV"
 
