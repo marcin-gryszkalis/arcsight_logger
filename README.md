@@ -17,9 +17,18 @@ Forked from https://github.com/zrlram/arcsight_logger (Raffael Marty of pixlclou
 
 ## examples
 ```
-$ ./query-logger.py -l mylogger -q ""(sourceAddress=\"$IP\" OR destinationAddress=\"$IP\") -s "`date -d \"7 days ago\" '+%F %T'`" 
+$ ./query-logger.py -l mylogger 
+    -q ""(sourceAddress=\"$IP\" OR destinationAddress=\"$IP\") 
+    -s "`date -d \"7 days ago\" '+%F %T'`" 
 
-$ ./query-logger.py -l mylogger -r F123F654-ABCD-CDEF-0000-123123123123 -s "2014-01-01 00:00:00" --reportdevices="192.168.0.0 [ARCS1]" --reportdevicegroups="NET" --reportstoragegroups="SGNET" -f csv
+$ ./query-logger.py -l mylogger 
+    -r F123F654-ABCD-CDEF-0000-123123123123 
+    -s "2014-01-01 00:00:00" 
+    --reportdevices="192.168.0.0 [ARCS1]" --reportdevicegroups="NET" --reportstoragegroups="SGNET" 
+    -f csv
 
-$ ./query-logger.py -l mylogger -q '(request contains ".exe")' -s "2014-01-01 09:00:00" -e "2014-01-01 17:00:00" | ./filter-eq.pl rt src request
+$ ./query-logger.py -l mylogger 
+    -q '(request contains ".exe")' 
+    -s "2014-01-01 09:00:00" -e "2014-01-01 17:00:00" 
+    | ./filter-eq.pl rt src request
 ```    
