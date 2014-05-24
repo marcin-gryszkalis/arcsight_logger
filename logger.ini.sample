@@ -1,0 +1,9 @@
+[credentials]
+user = loggeruser
+password = secretpassw0rd
+
+[loggers]
+mylogger1 = 192.168.0.1
+mylogger2 = 192.168.0.2
+myloggertest = 192.168.1.1
+
