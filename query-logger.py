@@ -14,6 +14,8 @@ import base64
 import signal
 import sys
 
+procstart = time.time()
+
 Config = ConfigParser.ConfigParser()
 Config.read("logger.ini")
 
@@ -22,7 +24,7 @@ password = Config.get("credentials", "password")
 
 
 def sigint_handler(signal, frame):
-    print >>sys.stderr, "Query interrupted"
+    log("Query interrupted")
     global token
     global login_client
     if token:
@@ -31,6 +33,16 @@ def sigint_handler(signal, frame):
 
 signal.signal(signal.SIGINT, sigint_handler)
 
+def hms_string(sec_elapsed):
+    h = int(sec_elapsed / (60 * 60))
+    m = int((sec_elapsed % (60 * 60)) / 60)
+    s = int(sec_elapsed % 60)
+    return "{}:{:>02d}:{:>02d}".format(h, m, s)
+
+def log(s):
+    #nowdt = datetime()
+    now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+    print >>sys.stderr,"%s %s" % (now, s)
 
 # command line
 def usage():
@@ -46,7 +58,7 @@ def usage():
 try:
     optlist, args = getopt.getopt(sys.argv[1:], 'l:s:e:q:r:t:f:dh', ['help', 'scanlimit=', 'resulttowlimit=','reportdevices=','reportdevicegroups=','reportstoragegroups='])
 except getopt.GetoptError as err:
-    print >>sys.stderr, str(err)
+    log(str(err))
     usage()
     sys.exit(2)
 
@@ -67,7 +79,7 @@ reportparameters=""
 reportformat="CSV"
 
 for o, a in optlist:
-#    print >>sys.stderr, "(%s)=(%s)" % (o,a)
+#    log("(%s)=(%s)" % (o,a))
     if o == "-v":
         verbose = True
     elif o in ("-h", "--help"):
@@ -108,7 +120,7 @@ if (not logger_id or (not query and not report_id and not servicedebug)):
     sys.exit(2)
 
 if (report_id and (reportformat != "csv" and reportformat != "pdf")):
-    print >>sys.stderr, "Invalid report format"
+    log("Error: invalid report format")
     usage()
     sys.exit(2)
 
@@ -118,7 +130,7 @@ IP = Config.get("loggers", logger_id)
 port = 443
 server =  "https://%s:%s/soap/services/" % (IP,port)
 
-print >>sys.stderr, "logger: %s" % server
+log("logger: %s" % server)
 
 # SOAP URLs
 xsd = "http://www.arcsight.com/logger/xsd"
@@ -129,10 +141,6 @@ login = "%sLoginService/LoginService.wsdl" % server
 search = "%sSearchService/SearchService.wsdl" % server
 report = "%sReportService/ReportService.wsdl" % server
 
-# Setup Logging
-import logging
-logging.basicConfig(level=logging.INFO)
-
 imp = Import(xsd)
 imp.filter.add(xsd_login)
 doctor = ImportDoctor(imp)
@@ -142,22 +150,22 @@ login_client = suds.client.Client(url=login, doctor=doctor, location=login)
 
 token = login_client.service.login(user, password)
 if not token:
-    print >>sys.stderr, "Error: failed to log in"
+    log("Error: failed to log in")
     exit(1)
 
 api_version = login_client.service.getVersion()
-print >> sys.stderr, "API version: %s" % (api_version)
+log("API version: %s" % (api_version))
 
 
 if (query or report_id):
-    print >>sys.stderr, "time range: %s -- %s" % (starttime, endtime or "Now")
+    log("time range: %s -- %s" % (starttime, endtime or "Now"))
     start = int(time.mktime(datetime.strptime(starttime, "%Y-%m-%d %H:%M:%S").timetuple())) * 1000
     end   = int(time.mktime(datetime.strptime(endtime, "%Y-%m-%d %H:%M:%S").timetuple())) * 1000 if endtime else int(time.time()) * 1000
 
 if (query):
 
-    print >>sys.stderr, "query: %s" % query
-    print >>sys.stderr, "step: %s" % step
+    log("query: %s" % query)
+    log("step: %s" % step)
 
     imp.filter.add(xsd_search)
     doctor = ImportDoctor(imp)  
@@ -168,15 +176,13 @@ if (query):
 
     #try:
     totali = 0
-    procstart = time.time()
     while client.service.hasMoreTuples(token):
         tuples = client.service.getNextTuples(step,10000,token)
         
         diff = time.time()-procstart
         if diff == 0: diff = 1
         totali = totali + len(tuples)
-        print >> sys.stderr, "extracted %d rows (%.2f/s)" % (totali,totali/diff)
-
+        log("extracted %d rows (%.2f/s), %s elapsed" % (totali, totali/diff, hms_string(diff)))
 
         for  t in tuples:
             print (t[0][2]).encode('utf8')
@@ -219,3 +225,8 @@ elif (servicedebug): # service debug
 
 # logout
 login_client.service.logout(token)
+
+diff = time.time()-procstart
+if diff == 0: diff = 1
+log("Total processing time: %s" % hms_string(diff))
+
