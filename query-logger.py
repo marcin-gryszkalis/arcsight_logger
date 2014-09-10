@@ -11,12 +11,26 @@ import pprint
 import getopt
 import ConfigParser
 import base64
+import signal
+import sys
 
 Config = ConfigParser.ConfigParser()
 Config.read("logger.ini")
 
 user = Config.get("credentials", "user")
 password = Config.get("credentials", "password")
+
+
+def sigint_handler(signal, frame):
+    print >>sys.stderr, "Query interrupted"
+    global token
+    global login_client
+    if token:
+        login_client.service.logout(token)
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, sigint_handler)
+
 
 # command line
 def usage():
@@ -128,7 +142,7 @@ login_client = suds.client.Client(url=login, doctor=doctor, location=login)
 
 token = login_client.service.login(user, password)
 if not token:
-    sys.stderr.write("Failed to log in")
+    print >>sys.stderr, "Error: failed to log in"
     exit(1)
 
 api_version = login_client.service.getVersion()
