@@ -7,12 +7,30 @@ Forked from https://github.com/zrlram/arcsight_logger (Raffael Marty of pixlclou
 
 ## usage
 ```
-    help:    %s -h
-    search:  %s [-v] -l logger -q query -s starttime [-e endtime] [-t step]
-    report:  %s [-v] -l logger -r report-id -s starttime [-e endtime] [-f (csv|pdf)] 
-        [--scanlimit=nnn] [--resulttowlimit=nnn] 
+Usage:
+    help:    query-logger.py -h
+    search:  query-logger.py [-v] -l logger -q query -s starttime [-e endtime] [-t step]
+    report:  query-logger.py [-v] -l logger -r report-id -s starttime [-e endtime] [-f (csv|pdf)]
+        [--scanlimit=nnn] [--resulttowlimit=nnn]
         [--reportdevices=sss] [--reportdevicegroups=sss] [--reportstoragegroups=sss]
-    devices: %s [-v] -l logger -d 
+    devices: query-logger.py [-v] -l logger -d
+
+```
+## configuration file
+It's required to have config file. Following locations are searched:
+ - /etc/logger.ini
+ - ~/.logger.ini
+ - ./logger.ini
+ 
+```
+[credentials]
+user = loggeruser
+password = secretpassw0rd
+
+[loggers]
+mylogger1 = 192.168.0.1
+mylogger2 = 192.168.0.2
+myloggertest = 192.168.1.1
 ```
 
 ## examples
@@ -32,3 +50,4 @@ $ ./query-logger.py -l mylogger
     -s "2014-01-01 09:00:00" -e "2014-01-01 17:00:00" 
     | ./filter-eq.pl rt src request
 ```    
+

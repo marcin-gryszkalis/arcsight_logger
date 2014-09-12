@@ -16,13 +16,6 @@ import sys
 
 procstart = time.time()
 
-Config = ConfigParser.ConfigParser()
-Config.read("logger.ini")
-
-user = Config.get("credentials", "user")
-password = Config.get("credentials", "password")
-
-
 def sigint_handler(signal, frame):
     log("Query interrupted")
     global token
@@ -124,8 +117,16 @@ if (report_id and (reportformat != "csv" and reportformat != "pdf")):
     usage()
     sys.exit(2)
 
-
 # config file
+Config = ConfigParser.ConfigParser()
+Config.read(['/etc/logger.ini', os.path.expanduser('~/.logger.ini'), './logger.ini'])
+if (not Config.has_section("credentials")):
+    log("Error: cannot read logger.ini")
+    sys.exit(2)
+
+user = Config.get("credentials", "user")
+password = Config.get("credentials", "password")
+
 IP = Config.get("loggers", logger_id)
 port = 443
 server =  "https://%s:%s/soap/services/" % (IP,port)
