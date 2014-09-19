@@ -13,6 +13,7 @@ import ConfigParser
 import base64
 import signal
 import sys
+import os
 
 procstart = time.time()
 
