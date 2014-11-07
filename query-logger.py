@@ -4,7 +4,6 @@
 
 import suds
 from suds.xsd.doctor import Import, ImportDoctor
-
 from datetime import datetime, timedelta
 import time, sys
 import pprint
@@ -14,6 +13,7 @@ import base64
 import signal
 import sys
 import os
+import logging
 
 procstart = time.time()
 
@@ -40,17 +40,17 @@ def log(s):
 
 # command line
 def usage():
-    print >>sys.stderr, """Usage: 
+    print >>sys.stderr, """Usage:
     help:    %s -h
-    search:  %s [-v] -l logger -q query -s starttime [-e endtime] [-t step]
-    report:  %s [-v] -l logger -r report-id -s starttime [-e endtime] [-f (csv|pdf)] 
-        [--scanlimit=nnn] [--resulttowlimit=nnn] 
+    search:  %s [-v] [-D] -l logger -q query -s starttime [-e endtime] [-t step]
+    report:  %s [-v] [-D] -l logger -r report-id -s starttime [-e endtime] [-f (csv|pdf)]
+        [--scanlimit=nnn] [--resulttowlimit=nnn]
         [--reportdevices=sss] [--reportdevicegroups=sss] [--reportstoragegroups=sss]
-    devices: %s [-v] -l logger -d 
+    devices: %s [-v] [-D] -l logger -d
     """ % (sys.argv[0],sys.argv[0],sys.argv[0],sys.argv[0])
 
 try:
-    optlist, args = getopt.getopt(sys.argv[1:], 'l:s:e:q:r:t:f:dh', ['help', 'scanlimit=', 'resulttowlimit=','reportdevices=','reportdevicegroups=','reportstoragegroups='])
+    optlist, args = getopt.getopt(sys.argv[1:], 'l:s:e:q:r:t:f:dhvD', ['help', 'scanlimit=', 'resulttowlimit=','reportdevices=','reportdevicegroups=','reportstoragegroups='])
 except getopt.GetoptError as err:
     log(str(err))
     usage()
@@ -58,6 +58,7 @@ except getopt.GetoptError as err:
 
 verbose = False
 servicedebug = False
+sudsdebug = False
 logger_id = False
 query = False
 report_id = False
@@ -74,7 +75,9 @@ reportformat="CSV"
 
 for o, a in optlist:
 #    log("(%s)=(%s)" % (o,a))
-    if o == "-v":
+    if o == "-D":
+        sudsdebug = True
+    elif o == "-v":
         verbose = True
     elif o in ("-h", "--help"):
         usage()
@@ -147,6 +150,15 @@ imp = Import(xsd)
 imp.filter.add(xsd_login)
 doctor = ImportDoctor(imp)
 
+if sudsdebug:
+    log("Debug mode enabled")
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger('suds.client').setLevel(logging.DEBUG)
+    logging.getLogger('suds.transport').setLevel(logging.DEBUG)
+    logging.getLogger('suds.xsd.schema').setLevel(logging.DEBUG)
+    logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
+
+
 # login
 login_client = suds.client.Client(url=login, doctor=doctor, location=login)
 
@@ -170,7 +182,7 @@ if (query):
     log("step: %s" % step)
 
     imp.filter.add(xsd_search)
-    doctor = ImportDoctor(imp)  
+    doctor = ImportDoctor(imp)
 
     # search
     client = suds.client.Client(url=search, doctor=doctor, location=search)
@@ -180,15 +192,15 @@ if (query):
     totali = 0
     while client.service.hasMoreTuples(token):
         tuples = client.service.getNextTuples(step,10000,token)
-        
+
         diff = time.time()-procstart
         if diff == 0: diff = 1
         totali = totali + len(tuples)
-        log("extracted %d rows (%.2f/s), %s elapsed" % (totali, totali/diff, hms_string(diff)))
+        log("extracted %d new rows, total %d rows (%.2f/s), %s elapsed" % (len(tuples), totali, totali/diff, hms_string(diff)))
 
         for  t in tuples:
             print (t[0][2]).encode('utf8')
-    #        
+    #
     # except:
     #         print "Stopping..."
 
@@ -197,7 +209,7 @@ if (query):
 elif (report_id): # report mode
 
     imp.filter.add(xsd_report)
-    doctor = ImportDoctor(imp)  
+    doctor = ImportDoctor(imp)
 
     client = suds.client.Client(url=report, doctor=doctor, location=report)
     client.set_options(timeout=600)
@@ -208,10 +220,10 @@ elif (report_id): # report mode
 elif (servicedebug): # service debug
 
     imp.filter.add(xsd_report)
-    doctor = ImportDoctor(imp)  
+    doctor = ImportDoctor(imp)
 
     client = suds.client.Client(url=report, doctor=doctor, location=report)
-    
+
     print "Devices:"
     dgs = client.service.getDeviceGroups(token)
     for dg in dgs:
@@ -231,4 +243,3 @@ login_client.service.logout(token)
 diff = time.time()-procstart
 if diff == 0: diff = 1
 log("Total processing time: %s" % hms_string(diff))
-
