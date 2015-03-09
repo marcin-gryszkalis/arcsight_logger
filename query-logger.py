@@ -5,6 +5,7 @@
 import suds
 from suds.xsd.doctor import Import, ImportDoctor
 from datetime import datetime, timedelta
+from dateutil import parser
 import time, sys
 import pprint
 import getopt
@@ -37,6 +38,9 @@ def log(s):
     #nowdt = datetime()
     now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
     print >>sys.stderr,"%s %s" % (now, s)
+
+def parsetime(s):
+    return int(time.mktime(parser.parse(s, dayfirst=True, yearfirst=False, fuzzy=True).timetuple())) * 1000
 
 # command line
 def usage():
@@ -173,8 +177,8 @@ log("API version: %s" % (api_version))
 
 if (query or report_id):
     log("time range: %s -- %s" % (starttime, endtime or "Now"))
-    start = int(time.mktime(datetime.strptime(starttime, "%Y-%m-%d %H:%M:%S").timetuple())) * 1000
-    end   = int(time.mktime(datetime.strptime(endtime, "%Y-%m-%d %H:%M:%S").timetuple())) * 1000 if endtime else int(time.time()) * 1000
+    start = parsetime(starttime)
+    end   = parsetime(endtime) if endtime else int(time.time()) * 1000
 
 if (query):
 
