@@ -15,6 +15,7 @@ import signal
 import sys
 import os
 import logging
+import re
 
 procstart = time.time()
 
@@ -131,6 +132,13 @@ Config.read(['/etc/logger.ini', os.path.expanduser('~/.logger.ini'), './logger.i
 if (not Config.has_section("credentials")):
     log("Error: cannot read logger.ini")
     sys.exit(2)
+
+# optionally stop veryfying SSL certs
+invalidssl = Config.get("options", "accept_invalid_ssl")
+if re.match('yes', invalidssl, flags=re.IGNORECASE):
+    import ssl
+    ssl._create_default_https_context = ssl._create_unverified_context
+
 
 user = Config.get("credentials", "user")
 password = Config.get("credentials", "password")

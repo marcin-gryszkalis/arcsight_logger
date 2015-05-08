@@ -30,6 +30,9 @@ password = secretpassw0rd
 mylogger1 = 192.168.0.1
 mylogger2 = 192.168.0.2
 myloggertest = 192.168.1.1
+
+[options]
+accept_invalid_ssl = yes
 ```
 
 ## examples
