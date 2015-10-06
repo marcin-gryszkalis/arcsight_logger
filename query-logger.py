@@ -69,14 +69,14 @@ query = False
 report_id = False
 starttime = False
 endtime = False
-step=1000
-scanlimit=0
-resulttowlimit=0
-reportdevices="null"
-reportdevicegroups="null"
-reportstoragegroups="null"
-reportparameters=""
-reportformat="CSV"
+step = 1000
+scanlimit = 0
+resulttowlimit = 0
+reportdevices = "null"
+reportdevicegroups = "null"
+reportstoragegroups = "null"
+reportparameters = ""
+reportformat = "CSV"
 
 for o, a in optlist:
 #    log("(%s)=(%s)" % (o,a))
@@ -224,7 +224,7 @@ elif (report_id): # report mode
     doctor = ImportDoctor(imp)
 
     client = suds.client.Client(url=report, doctor=doctor, location=report)
-    client.set_options(timeout=600)
+    client.set_options(timeout = 600)
     qreport = client.service.runReport(report_id, start, end, scanlimit, resulttowlimit, reportdevices, reportdevicegroups, reportstoragegroups, reportparameters, reportformat, token)
 
     print base64.b64decode(qreport)
@@ -252,6 +252,6 @@ elif (servicedebug): # service debug
 # logout
 login_client.service.logout(token)
 
-diff = time.time()-procstart
+diff = time.time() - procstart
 if diff == 0: diff = 1
 log("Total processing time: %s" % hms_string(diff))
