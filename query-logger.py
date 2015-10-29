@@ -6,7 +6,7 @@ import suds
 from suds.xsd.doctor import Import, ImportDoctor
 from datetime import datetime, timedelta
 from dateutil import parser
-import time, sys
+import time
 import pprint
 import getopt
 import ConfigParser
@@ -37,7 +37,7 @@ def hms_string(sec_elapsed):
 
 def log(s):
     #nowdt = datetime()
-    now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+    now = datetime.today().strftime("%F %T")
     print >>sys.stderr,"%s %s" % (now, s)
 
 def parsetime(s):
@@ -184,9 +184,15 @@ log("API version: %s" % (api_version))
 
 
 if (query or report_id):
-    log("time range: %s -- %s" % (starttime, endtime or "Now"))
     start = parsetime(starttime)
     end   = parsetime(endtime) if endtime else int(time.time()) * 1000
+    log("specified time range: %s -- %s" % (
+        starttime, 
+        endtime or "Now"))
+    log("calculated time range: %s -- %s" % (
+        datetime.fromtimestamp(start/1000).strftime("%F %T"),
+        datetime.fromtimestamp(end/1000).strftime("%F %T")))
+    
 
 if (query):
 
@@ -202,16 +208,31 @@ if (query):
 
     #try:
     totali = 0
+    rt = start
+    progress = 0
+    progressbar = ''
     while client.service.hasMoreTuples(token):
         tuples = client.service.getNextTuples(step,10000,token)
+
+        cefline = ""
+        for  t in tuples:
+            cefline = (t[0][2]).encode('utf8')
+            print cefline
+        sys.stdout.flush()
+
+        reres = re.search('\srt=(\d+)\s', cefline)
+        if reres:
+            rt = int(reres.group(1))
+            if rt < start: rt = start 
+            progress = (rt-start) * 100 / (end-start)
+            progressbar = '[{0}{1}]'.format('#' * int(progress/10), '-' * (10 - int(progress/10)))
 
         diff = time.time()-procstart
         if diff == 0: diff = 1
         totali = totali + len(tuples)
-        log("extracted %d new rows, total %d rows (%.2f/s), %s elapsed" % (len(tuples), totali, totali/diff, hms_string(diff)))
+        log("%s %02d%% - extracted %d new rows, total %d rows (%.2f/s), %s elapsed" % 
+            (progressbar, progress, len(tuples), totali, totali/diff, hms_string(diff)))
 
-        for  t in tuples:
-            print (t[0][2]).encode('utf8')
     #
     # except:
     #         print "Stopping..."
